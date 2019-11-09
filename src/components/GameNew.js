@@ -2,7 +2,6 @@ import React, {
 	useState
 } from 'react';
 import { Redirect } from 'react-router-dom';
-import { addPlayerToGame } from '../services/game';
 
 function GameNew({ userId }) {
 	const [
@@ -12,18 +11,14 @@ function GameNew({ userId }) {
 
 	const onClickHostHandler = () => {
 		const gameId = `Game_${Math.round(Math.random() * 1000)}`;
-
-		addPlayerToGame(gameId, userId)
-			.then(() => setGameId(gameId));
+		setGameId(gameId);
 	};
 
 	const onSubmitJoinHandler = e => {
 		e.preventDefault();
 
 		const gameId = e.target.elements.name.value.trim();
-
-		addPlayerToGame(gameId, userId)
-			.then(() => setGameId(gameId));
+		setGameId(gameId);
 	};
 
 	if (gameId) {

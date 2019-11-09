@@ -23,21 +23,27 @@ function GameLobby() {
 		setNumPlayers
 	] = useState(0);
 
+	const [
+		redirectTo,
+		setRedirectTo
+	] = useState(null);
+
 	useEffect(() => gameDocument.onSnapshot(snapshot => {
 		const snapshotPlayers = snapshot.exists
 			? Object.keys(snapshot.data())
 			: [];
 
 		if (!snapshotPlayers.includes(userId)) {
-			addPlayerToGame(snapshot.ref, userId);
-			return;
+			return snapshotPlayers.length < 2 && userId
+				? addPlayerToGame(snapshot.ref, userId)
+				: setRedirectTo('/');
 		}
 
 		setNumPlayers(snapshotPlayers.length);
 	}), []);
 
-	if (!gameId || !userId) {
-		return <Redirect to="/" />;
+	if (redirectTo) {
+		return <Redirect to={ redirectTo } />;
 	}
 
 	return (

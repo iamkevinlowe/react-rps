@@ -111,6 +111,9 @@ export const getWinner = gameSnapshot => {
  * @param {firebase.firestore.DocumentReference}    gameDocument
  */
 export const deleteWeapons = gameDocument => gameDocument.get()
-	.then(snapshot => Object.keys(snapshot.data())
-		.forEach(userId => addPlayerToGame(gameDocument, userId))
-	);
+	.then(snapshot => {
+		Object.keys(snapshot.data())
+			.forEach(userId => addPlayerToGame(gameDocument, userId)
+				.catch(err => console.log(`Error encountered: ${err}`))
+			);
+	});
