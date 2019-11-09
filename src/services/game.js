@@ -112,8 +112,12 @@ export const getWinner = gameSnapshot => {
  */
 export const deleteWeapons = gameDocument => gameDocument.get()
 	.then(snapshot => {
-		Object.keys(snapshot.data())
-			.forEach(userId => addPlayerToGame(gameDocument, userId)
-				.catch(err => console.log(`Error encountered: ${err}`))
-			);
+		const values = Object.keys(snapshot.data())
+			.reduce((memo, userId) => {
+				memo[userId] = { weapon: null };
+				return memo;
+			}, {});
+
+		snapshot.ref.update(values)
+			.catch(err => console.log(`Error encountered: ${err}`));
 	});
