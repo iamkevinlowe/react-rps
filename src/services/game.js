@@ -14,9 +14,8 @@ export const getGameDocument = gameId => db.collection('games').doc(gameId);
  *
  * @param   {string|firebase.firestore.DocumentReference}   gameId
  * @param   {string}                                        userId
- * @returns {Promise<void>}
  */
-export const addPlayerToGame = async (gameId, userId) => {
+export const addPlayerToGame = (gameId, userId) => {
 	const gameDocument = gameId.constructor.name === 'DocumentReference'
 		? gameId
 		: getGameDocument(gameId);
@@ -24,7 +23,8 @@ export const addPlayerToGame = async (gameId, userId) => {
 	const values = {};
 	values[userId] = { weapon: null };
 
-	return gameDocument.set(values, { merge: true });
+	gameDocument.set(values, { merge: true })
+		.catch(err => console.log(`Error encountered: ${err}`));
 };
 
 /**
