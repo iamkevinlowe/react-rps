@@ -13,19 +13,16 @@ export const getLocalUser = () => {
 	return localUser;
 };
 
-export const setLocalUser = user => {
-	localStorage.setItem('player', JSON.stringify(user));
-};
+export const setLocalUser = user => localStorage.setItem('player', JSON.stringify(user));
 
-export const addUser = async user => {
-	return db.collection('users')
-		.add(user)
-		.then(document => document.id);
-};
+export const addUser = async user => db.collection('users')
+	.add(user)
+	.then(document => {
+		user.id = document.id;
+		return user;
+	});
 
-export const getUser = async userId => {
-	return db.collection('users')
-		.doc(userId)
-		.get()
-		.then(snapshot => snapshot.data());
-};
+export const getUser = async userId => db.collection('users')
+	.doc(userId)
+	.get()
+	.then(snapshot => snapshot.data());

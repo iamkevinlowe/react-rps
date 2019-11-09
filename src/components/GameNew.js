@@ -10,7 +10,7 @@ function GameNew({ userId }) {
 		setGameId
 	] = useState(null);
 
-	const onClickHostHandler = e => {
+	const onClickHostHandler = () => {
 		const gameId = `Game_${Math.round(Math.random() * 1000)}`;
 
 		addPlayerToGame(gameId, userId)
@@ -27,7 +27,7 @@ function GameNew({ userId }) {
 	};
 
 	if (gameId) {
-		return <Redirect to={`/react-rps/game/${gameId}`} />;
+		return <Redirect to={`/game/${gameId}`} />;
 	}
 
 	return (

@@ -1,10 +1,7 @@
 import * as firebase from 'firebase/app';
 import db from './db';
 
-export const getGameDocument = gameId => {
-	return db.collection('games')
-		.doc(gameId);
-};
+export const getGameDocument = gameId => db.collection('games').doc(gameId);
 
 export const addPlayerToGame = async (gameId, userId) => {
 	const gameDocument = gameId.constructor.name === 'DocumentReference'
@@ -24,37 +21,34 @@ export const addWeaponToGame = async (gameDocument, userId, weapon) => {
 	return gameDocument.update(values);
 };
 
-export const getWeaponForPlayer = async (gameDocument, userId) => {
-	return gameDocument.get()
-		.then(snapshot => snapshot.data()[userId].weapon);
-};
+export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.get()
+	.then(snapshot => snapshot.data()[userId].weapon);
 
-export const getPlayers = async gameDocument => {
-	return gameDocument.get()
-		.then(snapshot => {
-			const userIds = Object.keys(snapshot.data());
-
-			return db.collection('users')
-				.where(firebase.firestore.FieldPath.documentId(), 'in', userIds)
-				.get()
-				.then(snapshot => snapshot.docs.map((document, index) => {
-					const user = document.data();
-					user.id = userIds[index];
-					return user;
-				}));
-		});
-};
+export const getPlayers = async gameDocument => gameDocument.get()
+	.then(snapshot => db.collection('users')
+		.where(firebase.firestore.FieldPath.documentId(), 'in', Object.keys(snapshot.data()))
+		.get()
+		.then(snapshot => snapshot.docs.map(document => {
+			const user = document.data();
+			user.userId = document.id;
+			return user;
+		}))
+	);
 
 export const getWinner = gameData => {
 	const players = Object.keys(gameData);
 
-	if (players.length < 2 || players.some(player => gameData[player].weapon === null)) {
+	if (
+		players.length < 2
+		|| players.some(player => gameData[player].weapon === null)
+	) {
 		return null;
 	}
 
 	const [aWeapon, bWeapon] = players.map(player => ({
 		userId: player,
-		weapon: gameData[player].weapon
+		weapon: gameData[player].weapon,
+		tie: false
 	}));
 
 	if (
@@ -64,7 +58,7 @@ export const getWinner = gameData => {
 	) {
 		return aWeapon;
 	} else if (aWeapon.weapon === bWeapon.weapon) {
-		return 0; // Maybe not the best representation of a tie
+		return { tie: true, weapon: aWeapon.weapon };
 	} else {
 		return bWeapon;
 	}
@@ -73,9 +67,15 @@ export const getWinner = gameData => {
 export const deleteWeapons = gameDocument => {
 	gameDocument.get()
 		.then(snapshot => {
-			Object.keys(snapshot.data()).forEach(userId => {
-				addPlayerToGame(gameDocument, userId)
-					.catch(err => console.log(`Error encountered: ${err}`));
-			});
+			const values = Object.keys(snapshot.data())
+				.reduce((memo, userId) => {
+					memo[userId] = { weapon: null };
+					return memo;
+				}, {});
+
+			gameDocument.set(values);
+		})
+		.catch(err => {
+			console.log(`Error encountered: ${err}`);
 		});
 };

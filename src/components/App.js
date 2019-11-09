@@ -1,7 +1,6 @@
 import React from 'react';
 import {
-	BrowserRouter as Router,
-	Redirect,
+	HashRouter as Router,
 	Route,
 	Switch
 } from 'react-router-dom';
@@ -12,14 +11,11 @@ function App() {
 	return (
 		<Router>
 			<Switch>
-				<Route path="/react-rps/game/:gameId">
+				<Route path="/game/:gameId">
 					<GameLobby />
 				</Route>
-				<Route path="/react-rps">
-					<Home />
-				</Route>
 				<Route path="/">
-					<Redirect to="/react-rps"/>
+					<Home />
 				</Route>
 			</Switch>
 		</Router>

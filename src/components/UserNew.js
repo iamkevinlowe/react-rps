@@ -1,6 +1,5 @@
 import React from 'react';
 import { addUser } from '../services/user';
-import './UserNew.css';
 
 function UserNew({ user, setUser }) {
 	const onSubmitHandler = e => {
@@ -13,16 +12,13 @@ function UserNew({ user, setUser }) {
 			return;
 		}
 
-		const user = { name, email };
-
-		addUser(user)
-			.then(id => {
-				user.id = id;
-				setUser(user);
-			});
+		addUser({ name, email }).then(setUser);
 	};
 
-	if (typeof user.name !== 'undefined' && typeof user.email !== 'undefined') {
+	if (
+		typeof user.name !== 'undefined'
+		&& typeof user.email !== 'undefined'
+	) {
 		return null;
 	}
 

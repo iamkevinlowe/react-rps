@@ -1,4 +1,5 @@
 import React, {
+	useEffect,
 	useState
 } from 'react';
 import { Link } from 'react-router-dom';
@@ -31,59 +32,56 @@ function Game({ gameDocument, userId }) {
 		setWinner
 	] = useState(null);
 
-	getPlayers(gameDocument)
-		.then(gamePlayers => {
-			if (!areArraysSame(gamePlayers, players)) {
-				setPlayers(gamePlayers);
-			}
-		});
+	useEffect(() => {
+		getPlayers(gameDocument)
+			.then(gamePlayers => {
+				if (!areArraysSame(gamePlayers, players)) {
+					setPlayers(gamePlayers);
+				}
+			});
 
-	getWeaponForPlayer(gameDocument, userId)
-		.then(weapon => setWeapon(weapon));
+		getWeaponForPlayer(gameDocument, userId)
+			.then(weapon => setWeapon(weapon));
 
-	gameDocument.onSnapshot(snapshot => {
-		const gameWinner = getWinner(snapshot.data());
+		return gameDocument.onSnapshot(snapshot => {
+			const gameWinner = getWinner(snapshot.data()) || {};
 
-		if (gameWinner === 0) {
-			setWinner(gameWinner);
-		} else if (gameWinner) {
-			const { userId, weapon } = gameWinner;
-
-			if (userId && weapon) {
-				getUser(userId)
+			if (gameWinner.tie) {
+				setWinner(gameWinner);
+			} else if (gameWinner.userId) {
+				getUser(gameWinner.userId)
 					.then(user => {
-						user.id = userId;
-						user.weapon = weapon;
+						Object.assign(user, gameWinner);
 
 						if (!areObjectsSame(user, winner)) {
 							setWinner(user);
 						}
 					});
 			}
-		}
-	});
+		});
+	}, []);
 
-	const getPlayerNamesCopy = () => {
-		return players.map(player => player.name)
-			.join(' vs ');
-	};
+	const getPlayerNamesCopy = () => players.map(player => player.name).join(' vs ');
 
 	const getWinnerCopy = () => {
-		if (winner === 0) {
-			setTimeout(() => {
-				deleteWeapons(gameDocument);
-				setWinner(null);
-			}, 3000);
+		if (winner) {
+			if (winner.tie) {
+				setTimeout(() => {
+					deleteWeapons(gameDocument);
+					setWeapon(null);
+					setWinner(null);
+				}, 3000);
 
-			return `It was a tie! Both selected ${weapon}. Starting a new match...`;
-		} else if (winner) {
-			if (winner.id === userId) {
-				const opponent = players.find(player => player.id !== winner.id);
+				return `It was a tie! Both selected ${winner.weapon}. Starting a new match...`;
+			} else if (winner.userId === userId) {
+				const opponent = players.find(player => player.userId !== winner.userId);
 				return `Congrats, you beat ${opponent.name} with ${weapon}!`;
 			} else {
 				return `Sorry, ${winner.name} won with ${winner.weapon}.`;
 			}
 		}
+
+		return '';
 	};
 
 	const onSubmitHandler = e => {
@@ -99,7 +97,7 @@ function Game({ gameDocument, userId }) {
 		return (
 			<>
 				<h5 className="card-title">{ getWinnerCopy() }</h5>
-				{ winner
+				{ winner.tie === false
 					? <Link to="/" className="btn btn-primary btn-block">Play again?</Link>
 					: null }
 			</>

@@ -1,4 +1,5 @@
 import React, {
+	useEffect,
 	useState,
 } from 'react';
 import {
@@ -12,33 +13,32 @@ import {
 	getGameDocument
 } from '../services/game';
 
-
 function GameLobby() {
 	const { gameId } = useParams();
 	const { id: userId } = getLocalUser();
+	const gameDocument = getGameDocument(gameId);
 
 	const [
 		numPlayers,
 		setNumPlayers
 	] = useState(0);
 
-	if (!gameId || !userId) {
-		return <Redirect to="/react-rps" />;
-	}
-
-	const gameDocument = getGameDocument(gameId);
-	gameDocument.onSnapshot(snapshot => {
-		const snapshotPlayers = Object.keys(snapshot.data());
+	useEffect(() => gameDocument.onSnapshot(snapshot => {
+		const snapshotPlayers = snapshot.exists
+			? Object.keys(snapshot.data())
+			: [];
 
 		if (!snapshotPlayers.includes(userId)) {
-			addPlayerToGame(gameDocument, userId);
+			addPlayerToGame(snapshot.ref, userId);
 			return;
 		}
 
 		setNumPlayers(snapshotPlayers.length);
-	}, err => {
-		console.log(`Encountered error: ${err}`);
-	});
+	}), []);
+
+	if (!gameId || !userId) {
+		return <Redirect to="/" />;
+	}
 
 	return (
 		<div className="row">
