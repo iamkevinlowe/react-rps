@@ -16,7 +16,7 @@ export const getGameDocument = gameId => db.collection('games').doc(gameId);
  * @param   {string}                                        userId
  */
 export const addPlayerToGame = (gameId, userId) => {
-	const gameDocument = gameId.constructor.name === 'DocumentReference'
+	const gameDocument = gameId instanceof firebase.firestore.DocumentReference
 		? gameId
 		: getGameDocument(gameId);
 

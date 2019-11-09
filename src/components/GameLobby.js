@@ -50,9 +50,7 @@ function GameLobby() {
 		<div className="row">
 			<div className="col-sm-4 offset-sm-4">
 				<div className="card">
-					<div className="card-header">
-						{ gameId }
-					</div>
+					<div className="card-header">{ gameId }</div>
 					<div className="card-body">
 						{ numPlayers < 2
 							? <h5 className="card-title">Waiting for player...</h5>
