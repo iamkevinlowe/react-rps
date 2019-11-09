@@ -44,7 +44,7 @@ function Game({ gameDocument, userId }) {
 			.then(weapon => setWeapon(weapon));
 
 		return gameDocument.onSnapshot(snapshot => {
-			const gameWinner = getWinner(snapshot.data()) || {};
+			const gameWinner = getWinner(snapshot);
 
 			if (gameWinner.tie) {
 				setWinner(gameWinner);
@@ -59,7 +59,7 @@ function Game({ gameDocument, userId }) {
 					});
 			}
 		});
-	}, []);
+	}, [gameDocument, userId]);
 
 	const getPlayerNamesCopy = () => players.map(player => player.name).join(' vs ');
 
