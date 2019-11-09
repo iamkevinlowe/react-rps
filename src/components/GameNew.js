@@ -27,7 +27,7 @@ function GameNew({ userId }) {
 	};
 
 	if (gameId) {
-		return <Redirect to={`/game/${gameId}`} />;
+		return <Redirect to={`/react-rps/game/${gameId}`} />;
 	}
 
 	return (

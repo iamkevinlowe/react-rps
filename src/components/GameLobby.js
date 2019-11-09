@@ -23,7 +23,7 @@ function GameLobby() {
 	] = useState(0);
 
 	if (!gameId || !userId) {
-		return <Redirect to="/" />;
+		return <Redirect to="/react-rps" />;
 	}
 
 	const gameDocument = getGameDocument(gameId);
