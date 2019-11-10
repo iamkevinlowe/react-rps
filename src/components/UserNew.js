@@ -23,23 +23,19 @@ function UserNew({ user, setUser }) {
 	}
 
 	return (
-		<div className="row">
-			<div className="col-sm-4 offset-md-4">
-				<div className="card">
-					<div className="card-body">
-						<h5 className="card-title">New phone, who dis?</h5>
-						<p className="card-text">Before we begin, I need to know who you are</p>
-						<form onSubmit={ onSubmitHandler }>
-							<div className="form-group">
-								<input type="text" className="form-control" name="name" placeholder="Your Name"/>
-							</div>
-							<div className="form-group">
-								<input type="email" className="form-control" name="email" placeholder="Your Email"/>
-							</div>
-							<button type="submit" className="btn btn-primary btn-block">Let's RPS!</button>
-						</form>
+		<div className="card">
+			<div className="card-body">
+				<h5 className="card-title">New phone, who dis?</h5>
+				<p className="card-text">Before we begin, I need to know who you are</p>
+				<form onSubmit={ onSubmitHandler }>
+					<div className="form-group">
+						<input type="text" className="form-control" name="name" placeholder="Your Name"/>
 					</div>
-				</div>
+					<div className="form-group">
+						<input type="email" className="form-control" name="email" placeholder="Your Email"/>
+					</div>
+					<button type="submit" className="btn btn-primary btn-block">Let's RPS!</button>
+				</form>
 			</div>
 		</div>
 	);

@@ -20,10 +20,12 @@ export const addPlayerToGame = (gameId, userId) => {
 		? gameId
 		: getGameDocument(gameId);
 
-	const values = {};
-	values[userId] = { weapon: null };
+	const values = {
+		userId,
+		weapon: null
+	};
 
-	gameDocument.set(values, { merge: true })
+	gameDocument.collection('players').add(values)
 		.catch(err => console.log(`Error encountered: ${err}`));
 };
 
@@ -33,13 +35,15 @@ export const addPlayerToGame = (gameId, userId) => {
  * @param   {firebase.firestore.DocumentReference}  gameDocument
  * @param   {string}                                userId
  * @param   {string}                                weapon
- * @returns {Promise<void>}
+ * @returns {Promise<firebase.firestore.QuerySnapshot>}
  */
 export const addWeaponToGame = async (gameDocument, userId, weapon) => {
-	const values = {};
-	values[userId] = { weapon };
+	const values = { weapon };
 
-	return gameDocument.update(values);
+	return gameDocument.collection('players')
+		.where('userId', '==', userId)
+		.get()
+		.then(snapshot => snapshot.docs[0].ref.update(values));
 };
 
 /**
@@ -47,64 +51,51 @@ export const addWeaponToGame = async (gameDocument, userId, weapon) => {
  *
  * @param   {firebase.firestore.DocumentReference}  gameDocument
  * @param   {string}                                userId
- * @returns {Promise<string|void>}
+ * @returns {Promise<firebase.firestore.QuerySnapshot>}
  */
-export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.get()
-	.then(snapshot => snapshot.data()[userId].weapon);
-
-/**
- * Gets the players for the given game
- *
- * @param   {firebase.firestore.DocumentReference}          gameDocument
- * @returns {Promise<firebase.firestore.DocumentData>}
- */
-export const getPlayers = async gameDocument => gameDocument.get()
-	.then(snapshot => snapshot.exists
-		? db.collection('users')
-			.where(firebase.firestore.FieldPath.documentId(), 'in', Object.keys(snapshot.data()))
-			.get()
-			.then(snapshot => snapshot.docs.map(document => {
-				const user = document.data();
-				user.userId = document.id;
-				return user;
-			}))
-		: []
-	);
+export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.collection('players')
+	.where('userId', '==', userId)
+	.get()
+	.then(snapshot => snapshot.empty
+		? addPlayerToGame(gameDocument, userId).then(() => null)
+		: snapshot.docs[0].data().weapon);
 
 /**
  * Determines the winner from the document snapshot data
  *
- * @param   {firebase.firestore.DocumentSnapshot}   gameSnapshot
+ * @param   {{userId: string, weapon: *}[]}   players
  * @returns {{tie: boolean, userId: *, weapon: *}}
  */
-export const getWinner = gameSnapshot => {
-	const gameData = gameSnapshot.data();
-	const playerIds = Object.keys(gameData);
-
-	if (
-		playerIds.length < 2
-		|| playerIds.some(playerId => gameData[playerId].weapon === null)
-	) {
-		return { tie: false, userId: null, weapon: null };
-	}
-
-	const [aWeapon, bWeapon] = playerIds.map(playerId => ({
+export const getWinner = players => {
+	const winner = {
 		tie: false,
-		userId: playerId,
-		weapon: gameData[playerId].weapon
-	}));
+		userId: null,
+		weapon: null
+	};
 
 	if (
-		(aWeapon.weapon === 'Rock' && bWeapon.weapon === 'Scissors')
-		|| (aWeapon.weapon === 'Paper' && bWeapon.weapon === 'Rock')
-		|| (aWeapon.weapon === 'Scissors' && bWeapon.weapon === 'Paper')
+		players.length < 2
+		|| players.some(({ weapon }) => weapon === null)
 	) {
-		return aWeapon;
-	} else if (aWeapon.weapon === bWeapon.weapon) {
-		return { tie: true, userId: null, weapon: aWeapon.weapon };
-	} else {
-		return bWeapon;
+		return winner;
 	}
+
+	const [aPlayer, bPlayer] = players;
+
+	if (
+		(aPlayer.weapon === 'Rock' && bPlayer.weapon === 'Scissors')
+		|| (aPlayer.weapon === 'Paper' && bPlayer.weapon === 'Rock')
+		|| (aPlayer.weapon === 'Scissors' && bPlayer.weapon === 'Paper')
+	) {
+		Object.assign(winner, aPlayer);
+	} else if (aPlayer.weapon === bPlayer.weapon) {
+		winner.tie = true;
+		winner.weapon = aPlayer.weapon;
+	} else {
+		Object.assign(winner, bPlayer);
+	}
+
+	return winner;
 };
 
 /**
@@ -112,14 +103,19 @@ export const getWinner = gameSnapshot => {
  *
  * @param {firebase.firestore.DocumentReference}    gameDocument
  */
-export const deleteWeapons = gameDocument => gameDocument.get()
+export const deleteWeapons = gameDocument => gameDocument.collection('players')
+	.get()
 	.then(snapshot => {
-		const values = Object.keys(snapshot.data())
-			.reduce((memo, userId) => {
-				memo[userId] = { weapon: null };
-				return memo;
-			}, {});
-
-		snapshot.ref.update(values)
-			.catch(err => console.log(`Error encountered: ${err}`));
+		snapshot.docs.forEach(document => document.ref.update({ weapon: null }));
 	});
+
+/**
+ * Gets all the games where the given user is a player of
+ *
+ * @param userId
+ * @returns {Promise<firebase.firestore.DocumentReference[]>}
+ */
+export const getGamesForUser = userId => db.collectionGroup('players')
+	.where('userId', '==', userId)
+	.get()
+	.then(snapshot => snapshot.docs.map(document => document.ref.parent.parent));

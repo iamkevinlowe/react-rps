@@ -26,21 +26,19 @@ function GameNew({ userId }) {
 	}
 
 	return (
-		<div className="row">
-			<div className="col-sm-4 offset-sm-4">
-				<div className="card">
-					<div className="card-body">
-						<p className="card-text">Decide if you want to start a new game, or join an existing one</p>
-						<button className="btn btn-primary btn-block mb-3" onClick={ onClickHostHandler }>Start a new game</button>
-						<hr/>
-						<form onSubmit={ onSubmitJoinHandler }>
-							<div className="form-group">
-								<input type="text" className="form-control" name="name" placeholder="Game Name"/>
-							</div>
-							<button type="submit" className="btn btn-primary btn-block">Join a game</button>
-						</form>
+		<div className="card">
+			<div className="card-body">
+				<p className="card-text">Decide if you want to start a new game, or join an existing one</p>
+				<button className="btn btn-primary btn-block mb-3" onClick={ onClickHostHandler }>Start a new game</button>
+
+				<hr/>
+
+				<form onSubmit={ onSubmitJoinHandler }>
+					<div className="form-group">
+						<input type="text" className="form-control" name="name" placeholder="Game Name"/>
 					</div>
-				</div>
+					<button type="submit" className="btn btn-primary btn-block">Join a game</button>
+				</form>
 			</div>
 		</div>
 	);

@@ -20,11 +20,13 @@ function Home() {
 	};
 
 	return (
-		<div className="Home">
-			<UserNew user={ user } setUser={ setLocalAndStateUser } />
-			{ user.id
-				? <GameNew userId={ user.id }/>
-				: null }
+		<div className="row">
+			<div className="col-sm-8 offset-sm-2">
+				<UserNew user={ user } setUser={ setLocalAndStateUser } />
+				{ user.id
+					? <GameNew userId={ user.id }/>
+					: null }
+			</div>
 		</div>
 	);
 }

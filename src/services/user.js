@@ -28,8 +28,8 @@ export const setLocalUser = user => localStorage.setItem('player', JSON.stringif
 /**
  * Inserts a user to the users collection
  *
- * @param   {object}            user
- * @returns {Promise<{object}>}
+ * @param   {object}                                        user
+ * @returns {Promise<firebase.firestore.DocumentReference>}
  */
 export const addUser = async user => db.collection('users')
 	.add(user)

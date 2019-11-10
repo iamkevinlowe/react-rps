@@ -9,7 +9,6 @@ import {
 	getWeaponForPlayer,
 	getWinner
 } from '../services/game';
-import { getUser } from '../services/user';
 import { areObjectsSame } from '../services/utils';
 
 function Game({ gameDocument, players, userId }) {
@@ -21,29 +20,20 @@ function Game({ gameDocument, players, userId }) {
 	const [
 		winner,
 		setWinner
-	] = useState(null);
+	] = useState({});
 
 	useEffect(() => {
 		getWeaponForPlayer(gameDocument, userId)
 			.then(weapon => setWeapon(weapon));
-
-		return gameDocument.onSnapshot(snapshot => {
-			const gameWinner = getWinner(snapshot);
-
-			if (gameWinner.tie) {
-				setWinner(gameWinner);
-			} else if (gameWinner.userId) {
-				getUser(gameWinner.userId)
-					.then(user => {
-						Object.assign(user, gameWinner);
-
-						if (!areObjectsSame(user, winner)) {
-							setWinner(user);
-						}
-					});
-			}
-		});
 	}, [gameDocument, userId]);
+
+	useEffect(() => {
+		const gameWinner = getWinner(players);
+
+		if (!areObjectsSame(gameWinner, winner)) {
+			setWinner(gameWinner);
+		}
+	}, [players]);
 
 	const getPlayerNamesCopy = () => players.map(player => player.name).join(' vs. ');
 
@@ -76,22 +66,22 @@ function Game({ gameDocument, players, userId }) {
 			.then(() => setWeapon(weapon));
 	};
 
-	if (winner !== null) {
-		if (winner.tie) {
-			setTimeout(() => {
-				deleteWeapons(gameDocument);
-				setWeapon(null);
-				setWinner(null);
-			}, 3000);
+	if (winner.tie) {
+		setTimeout(() => {
+			deleteWeapons(gameDocument);
+			setWeapon(null);
+			setWinner({});
+		}, 3000);
 
-			return (
-				<>
-					<h5 className="card-title">{ getPlayerNamesCopy() }</h5>
-					<p className="card-text">It was a tie! Both selected <span className="text-primary">{ getWeaponIcon(winner.weapon) }</span>. Starting a new match...</p>
-				</>
-			);
-		}
+		return (
+			<>
+				<h5 className="card-title">{ getPlayerNamesCopy() }</h5>
+				<p className="card-text">It was a tie! Both selected <span className="text-primary">{ getWeaponIcon(winner.weapon) }</span>. Starting a new match...</p>
+			</>
+		);
+	}
 
+	if (winner.userId) {
 		return (
 			<>
 				<h5 className="card-title">
@@ -107,7 +97,7 @@ function Game({ gameDocument, players, userId }) {
 							'.'
 						] }
 				</h5>
-				<Link to="/" className="btn btn-primary btn-block">Play again?</Link>
+				<Link to="/home" className="btn btn-primary btn-block">Play again?</Link>
 			</>
 		);
 	}
