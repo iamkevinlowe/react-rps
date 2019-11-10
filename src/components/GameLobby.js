@@ -7,11 +7,13 @@ import {
 	useParams
 } from 'react-router-dom';
 import Game from './Game';
-import { getLocalUser } from '../services/user';
 import {
 	addPlayerToGame,
-	getGameDocument
+	getGameDocument,
+	getPlayers
 } from '../services/game';
+import { getLocalUser } from '../services/user';
+import { areArraysSame } from '../services/utils';
 
 function GameLobby() {
 	const { gameId } = useParams();
@@ -19,9 +21,9 @@ function GameLobby() {
 	const gameDocument = getGameDocument(gameId);
 
 	const [
-		numPlayers,
-		setNumPlayers
-	] = useState(0);
+		players,
+		setPlayers
+	] = useState([]);
 
 	const [
 		redirectTo,
@@ -29,17 +31,18 @@ function GameLobby() {
 	] = useState(null);
 
 	useEffect(() => gameDocument.onSnapshot(snapshot => {
-		const snapshotPlayers = snapshot.exists
-			? Object.keys(snapshot.data())
-			: [];
+		getPlayers(snapshot.ref)
+			.then(gamePlayers => {
+				if (!gamePlayers.find(({ userId: playerId }) => playerId === userId)) {
+					return gamePlayers.length < 2 && userId
+						? addPlayerToGame(snapshot.ref, userId)
+						: setRedirectTo('/');
+				}
 
-		if (!snapshotPlayers.includes(userId)) {
-			return snapshotPlayers.length < 2 && userId
-				? addPlayerToGame(snapshot.ref, userId)
-				: setRedirectTo('/');
-		}
-
-		setNumPlayers(snapshotPlayers.length);
+				if (!areArraysSame(gamePlayers, players)) {
+					setPlayers(gamePlayers);
+				}
+			});
 	}), []);
 
 	if (redirectTo) {
@@ -52,9 +55,9 @@ function GameLobby() {
 				<div className="card">
 					<div className="card-header">{ gameId }</div>
 					<div className="card-body">
-						{ numPlayers < 2
+						{ players.length < 2
 							? <h5 className="card-title">Waiting for player...</h5>
-							: <Game gameDocument={ gameDocument } userId={ userId } /> }
+							: <Game gameDocument={ gameDocument } players={ players } userId={ userId } /> }
 					</div>
 				</div>
 			</div>

@@ -56,17 +56,19 @@ export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.g
  * Gets the players for the given game
  *
  * @param   {firebase.firestore.DocumentReference}          gameDocument
- * @returns {Promise<firebase.firestore.DocumentData[]>}
+ * @returns {Promise<firebase.firestore.DocumentData>}
  */
 export const getPlayers = async gameDocument => gameDocument.get()
-	.then(snapshot => db.collection('users')
-		.where(firebase.firestore.FieldPath.documentId(), 'in', Object.keys(snapshot.data()))
-		.get()
-		.then(snapshot => snapshot.docs.map(document => {
-			const user = document.data();
-			user.userId = document.id;
-			return user;
-		}))
+	.then(snapshot => snapshot.exists
+		? db.collection('users')
+			.where(firebase.firestore.FieldPath.documentId(), 'in', Object.keys(snapshot.data()))
+			.get()
+			.then(snapshot => snapshot.docs.map(document => {
+				const user = document.data();
+				user.userId = document.id;
+				return user;
+			}))
+		: []
 	);
 
 /**

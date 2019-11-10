@@ -6,22 +6,13 @@ import { Link } from 'react-router-dom';
 import {
 	addWeaponToGame,
 	deleteWeapons,
-	getPlayers,
 	getWeaponForPlayer,
 	getWinner
 } from '../services/game';
 import { getUser } from '../services/user';
-import {
-	areArraysSame,
-	areObjectsSame
-} from '../services/utils';
+import { areObjectsSame } from '../services/utils';
 
-function Game({ gameDocument, userId }) {
-	const [
-		players,
-		setPlayers
-	] = useState([]);
-
+function Game({ gameDocument, players, userId }) {
 	const [
 		weapon,
 		setWeapon
@@ -33,13 +24,6 @@ function Game({ gameDocument, userId }) {
 	] = useState(null);
 
 	useEffect(() => {
-		getPlayers(gameDocument)
-			.then(gamePlayers => {
-				if (!areArraysSame(gamePlayers, players)) {
-					setPlayers(gamePlayers);
-				}
-			});
-
 		getWeaponForPlayer(gameDocument, userId)
 			.then(weapon => setWeapon(weapon));
 
@@ -66,23 +50,23 @@ function Game({ gameDocument, userId }) {
 	const getOpponentName = () => players.find(player => player.userId !== winner.userId).name;
 
 	const getWeaponIcon = weapon => {
-		const attributes = {};
+		let className = '';
 
 		switch (weapon) {
 			case 'Rock':
-				attributes.className = 'fas fa-hand-rock';
+				className = 'fas fa-hand-rock';
 				break;
 			case 'Paper':
-				attributes.className = 'fas fa-hand-paper';
+				className = 'fas fa-hand-paper';
 				break;
 			case 'Scissors':
-				attributes.className = 'fas fa-hand-scissors';
+				className = 'fas fa-hand-scissors';
 				break;
 			default:
 				return null;
 		}
 
-		return <i { ...attributes }></i>;
+		return <i className={ className }></i>;
 	};
 
 	const onClickWeaponHandler = e => {
