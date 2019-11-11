@@ -31,12 +31,28 @@ export const setLocalUser = user => localStorage.setItem('player', JSON.stringif
  * @param   {object}                                        user
  * @returns {Promise<firebase.firestore.DocumentReference>}
  */
-export const addUser = async user => db.collection('users')
-	.add(user)
-	.then(document => {
-		user.id = document.id;
-		return user;
-	});
+export const addUser = async user => {
+	const usersCollection = db.collection('users');
+
+	return usersCollection.where('email', '==', user.email)
+		.get()
+		.then(snapshot => {
+			if (snapshot.empty) {
+				return usersCollection.add(user)
+					.then(document => {
+						user.id = document.id;
+						return user;
+					});
+			}
+
+			const userDocument = snapshot.docs[0].ref;
+			return userDocument.update({ name: user.name })
+				.then(() => {
+					user.id = userDocument.id;
+					return user;
+				});
+		});
+};
 
 /**
  * Gets the data for the given user

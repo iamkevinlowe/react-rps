@@ -47,9 +47,13 @@ function GameLobby() {
 			Promise.all(promises)
 				.then(gamePlayers => {
 					if (!gamePlayers.find(({ userId: playerId }) => playerId === userId)) {
-						return gamePlayers.length < 2 && userId
-							? addPlayerToGame(gameDocument, userId)
-							: setRedirectTo('/home');
+						if (gamePlayers.length >= 2) {
+							setRedirectTo('/home');
+						} else if (!userId) {
+							setRedirectTo(`/home?redirectTo=${window.location.hash.slice(1)}`);
+						} else {
+							addPlayerToGame(gameDocument, userId);
+						}
 					}
 
 					if (!areArraysSame(gamePlayers, players)) {

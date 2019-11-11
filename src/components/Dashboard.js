@@ -2,7 +2,10 @@ import React, {
 	useEffect,
 	useState
 } from 'react';
-import { Link } from 'react-router-dom';
+import {
+	Link,
+	Redirect
+} from 'react-router-dom';
 import {
 	getGamesForUser,
 	getWinner
@@ -33,6 +36,10 @@ function Dashboard() {
 	] = useState({ wins: 0, ties: 0, losses: 0 });
 
 	useEffect(() => {
+		if (!userId) {
+			return;
+		}
+
 		getGamesForUser(userId)
 			.then(documents => {
 				const promises = documents.map(document => document.collection('players').get());
@@ -92,6 +99,10 @@ function Dashboard() {
 		setGamesWaitingForYourMove(newGamesWaitingForYourMove);
 		setStats(newStats);
 	};
+
+	if (!userId) {
+		return <Redirect to="/home?redirectTo=/dashboard" />;
+	}
 
 	return (
 		<div className="row">

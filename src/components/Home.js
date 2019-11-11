@@ -1,8 +1,12 @@
 import React, {
 	useState
 } from 'react';
-import UserNew from './UserNew';
+import {
+	Redirect,
+	useLocation,
+} from 'react-router-dom';
 import GameNew from './GameNew';
+import UserNew from './UserNew';
 import {
 	getLocalUser,
 	setLocalUser
@@ -14,10 +18,16 @@ function Home() {
 		setUser
 	] = useState(getLocalUser());
 
+	const redirectTo = new URLSearchParams(useLocation().search).get('redirectTo');
+
 	const setLocalAndStateUser = user => {
 		setLocalUser(user);
 		setUser(user);
 	};
+
+	if (user.id && redirectTo) {
+		return <Redirect to={ redirectTo }/>;
+	}
 
 	return (
 		<div className="row">
