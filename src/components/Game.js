@@ -33,6 +33,7 @@ function Game({ gameDocument, players, userId }) {
 		if (!areObjectsSame(gameWinner, winner)) {
 			setWinner(gameWinner);
 		}
+		// eslint-disable-next-line
 	}, [players]);
 
 	const getPlayerNamesCopy = () => players.map(player => player.name).join(' vs. ');

@@ -60,6 +60,7 @@ function GameLobby() {
 						setPlayers(gamePlayers);
 					}
 				});
+			// eslint-disable-next-line
 		}), []);
 
 	if (redirectTo) {

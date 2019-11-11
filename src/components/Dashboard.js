@@ -2,10 +2,7 @@ import React, {
 	useEffect,
 	useState
 } from 'react';
-import {
-	Link,
-	Redirect
-} from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import DashbaordGamesList from './DashboardGamesList';
 import {
 	getGamesForUser,
@@ -48,6 +45,7 @@ function Dashboard() {
 				Promise.all(promises)
 					.then(handleGameUpdates);
 			});
+		// eslint-disable-next-line
 	}, [userId]);
 
 	const handleGameUpdates = snapshots => {
