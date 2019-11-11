@@ -6,7 +6,7 @@ import {
 	useLocation,
 } from 'react-router-dom';
 import GameNew from './GameNew';
-import UserNew from './UserNew';
+import UserNew from './UserNew/UserNew';
 import {
 	getLocalUser,
 	setLocalUser
@@ -32,10 +32,9 @@ function Home() {
 	return (
 		<div className="row">
 			<div className="col-sm-8 offset-sm-2">
-				<UserNew user={ user } setUser={ setLocalAndStateUser } />
 				{ user.id
 					? <GameNew userId={ user.id }/>
-					: null }
+					: <UserNew setUser={ setLocalAndStateUser } /> }
 			</div>
 		</div>
 	);
