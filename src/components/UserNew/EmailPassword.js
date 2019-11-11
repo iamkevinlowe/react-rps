@@ -52,6 +52,7 @@ function EmailPassword() {
 		}
 
 		signInEmail({ name, email });
+		setIsPendingEmailLinkSent(true);
 	};
 
 	return (
@@ -64,13 +65,19 @@ function EmailPassword() {
 					<button className="btn btn-link" onClick={ onClickResendHandler }>Click here to resend verification email</button>
 				</>
 				: <form onSubmit={ onSubmitFormHandler }>
-					<div className="form-group">
-						<input type="text" className="form-control" name="name" placeholder="Your Name"/>
+					<div className="form-row form-group">
+						<div className="col">
+							<input type="text" className="form-control" name="name" placeholder="Your Name"/>
+						</div>
+						<div className="col">
+							<input type="email" className="form-control" name="email" placeholder="Your Email"/>
+						</div>
 					</div>
-					<div className="form-group">
-						<input type="email" className="form-control" name="email" placeholder="Your Email"/>
-					</div>
-					<button type="submit" className="btn btn-primary btn-block">Let's RPS!</button>
+
+					<button type="submit" className="btn btn-outline-primary btn-block">
+						<span className="float-left"><i className="far fa-envelope"></i></span>
+						Sign in with Email
+					</button>
 				</form> }
 		</>
 	);

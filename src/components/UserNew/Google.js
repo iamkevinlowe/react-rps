@@ -10,10 +10,8 @@ function Google() {
 		<>
 			<hr/>
 
-			<button className="btn btn-block btn-outline-secondary" onClick={ onClickGoogleHandler }>
-				<span className="badge badge-light mr-2">
-					<i className="fa fa-google"></i>
-				</span>
+			<button className="btn btn-outline-secondary btn-block" onClick={ onClickGoogleHandler }>
+				<span className="float-left"><i className="fab fa-google"></i></span>
 				Sign in with Google
 			</button>
 		</>
