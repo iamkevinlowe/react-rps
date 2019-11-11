@@ -6,6 +6,7 @@ import {
 	Link,
 	Redirect
 } from 'react-router-dom';
+import DashbaordGamesList from './DashboardGamesList';
 import {
 	getGamesForUser,
 	getWinner
@@ -115,32 +116,9 @@ function Dashboard() {
 						<p className="card-text"><span className="strong">Ties:</span> {stats.ties}</p>
 						<p className="card-text"><span className="strong">Losses:</span> {stats.losses}</p>
 
-						<hr/>
-
-						<h5 className="card-title">Waiting for an opponent...</h5>
-						<div className="btn-group-vertical d-block">
-							{ Object.keys(gamesWaitingForOpponent).map(documentId => (
-								<Link className="btn btn-primary" to={ `/game/${documentId}` } key={ documentId }>{ documentId }</Link>
-							)) }
-						</div>
-
-						<hr/>
-
-						<h5 className="card-title">Waiting for opponent's move...</h5>
-						<div className="btn-group-vertical d-block">
-							{ Object.keys(gamesWaitingForOpponentMove).map(documentId => (
-								<Link className="btn btn-primary" to={ `/game/${documentId}` } key={ documentId }>{ documentId }</Link>
-							)) }
-						</div>
-
-						<hr/>
-
-						<h5 className="card-title">Waiting for your move...</h5>
-						<div className="btn-group-vertical d-block">
-							{ Object.keys(gamesWaitingForYourMove).map(documentId => (
-								<Link className="btn btn-primary" to={ `/game/${documentId}` } key={ documentId }>{ documentId }</Link>
-							)) }
-						</div>
+						<DashbaordGamesList title="Waiting for an opponent..." games={ gamesWaitingForOpponent } />
+						<DashbaordGamesList title="Waiting for opponent's move..." games={ gamesWaitingForOpponentMove } />
+						<DashbaordGamesList title="Waiting for your move..." games={ gamesWaitingForYourMove } />
 					</div>
 				</div>
 			</div>
