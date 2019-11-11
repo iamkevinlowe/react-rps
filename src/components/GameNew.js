@@ -33,11 +33,13 @@ function GameNew({ userId }) {
 
 				<hr/>
 
-				<form onSubmit={ onSubmitJoinHandler }>
-					<div className="form-group">
+				<form className="form-inline" onSubmit={ onSubmitJoinHandler }>
+					<div className="input-group w-100">
 						<input type="text" className="form-control" name="name" placeholder="Game Name"/>
+						<div className="input-group-append">
+							<button type="submit" className="btn btn-primary">Join a game</button>
+						</div>
 					</div>
-					<button type="submit" className="btn btn-primary btn-block">Join a game</button>
 				</form>
 			</div>
 		</div>

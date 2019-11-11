@@ -15,18 +15,14 @@ function Navbar() {
 	});
 
 	return (
-		<nav className="navbar navbar-expand navbar-light bg-light mb-5">
-			<div className="collapse navbar-collapse">
-				<ul className="navbar-nav">
-					<li className={ `nav-item${homeMatch ? ' active' : ''}` }>
-						<Link className="nav-link" to="/home">Home</Link>
-					</li>
-					<li className={ `nav-item${dashboardMatch ? ' active' : ''}` }>
-						<Link className="nav-link" to="/dashboard">Dashboard</Link>
-					</li>
-				</ul>
-			</div>
-		</nav>
+		<ul className="nav nav-pills mt-3 mb-5">
+			<li className="nav-item">
+				<Link className={ `nav-link${homeMatch ? ' active' : ''}` } to="/home">Home</Link>
+			</li>
+			<li className="nav-item">
+				<Link className={ `nav-link${dashboardMatch ? ' active' : ''}` } to="/dashboard">Dashboard</Link>
+			</li>
+		</ul>
 	);
 }
 
