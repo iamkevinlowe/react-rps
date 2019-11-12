@@ -18,9 +18,13 @@ import {
 import { areArraysSame } from '../services/utils';
 
 function GameLobby() {
-	const { gameId } = useParams();
+	const { gameName } = useParams();
 	const { id: userId } = getLocalUser();
-	const gameDocument = getGameDocument(gameId);
+
+	const [
+		gameDocument,
+		setGameDocument
+	] = useState(null);
 
 	const [
 		players,
@@ -32,36 +36,50 @@ function GameLobby() {
 		setRedirectTo
 	] = useState(null);
 
-	useEffect(() => gameDocument.collection('players')
-		.onSnapshot(snapshot => {
-			const promises = snapshot.docs.map(document => {
-				const {userId, weapon} = document.data();
-				return getUser(userId)
+	useEffect(() => {
+		let cleanup = null;
+
+		getGameDocument(gameName).then(gameDocument => {
+			setGameDocument(gameDocument);
+
+			cleanup = gameDocument.onSnapshot(snapshot => {
+				const { name, userIds = [], weapons = [] } = snapshot.data();
+				if (name !== gameName) {
+					setRedirectTo(`/game/${name}`);
+					return;
+				}
+
+				if (!userIds.includes(userId)) {
+					if (userIds.length >= 2) {
+						setRedirectTo('/home');
+					} else if (!userId) {
+						setRedirectTo(`/home?redirectTo=${window.location.hash.slice(1)}`);
+					} else {
+						addPlayerToGame(gameDocument, userId);
+					}
+					return;
+				}
+
+				const playersPromises = userIds.map(userId => getUser(userId)
 					.then(user => {
+						const { weapon = null } = weapons.find(item => item.userId === userId) || {};
 						user.userId = userId;
 						user.weapon = weapon;
 						return user;
+					}));
+
+				Promise.all(playersPromises)
+					.then(gamePlayers => {
+						if (!areArraysSame(gamePlayers, players)) {
+							setPlayers(gamePlayers);
+						}
 					});
 			});
+		});
 
-			Promise.all(promises)
-				.then(gamePlayers => {
-					if (!gamePlayers.find(({ userId: playerId }) => playerId === userId)) {
-						if (gamePlayers.length >= 2) {
-							setRedirectTo('/home');
-						} else if (!userId) {
-							setRedirectTo(`/home?redirectTo=${window.location.hash.slice(1)}`);
-						} else {
-							addPlayerToGame(gameDocument, userId);
-						}
-					}
-
-					if (!areArraysSame(gamePlayers, players)) {
-						setPlayers(gamePlayers);
-					}
-				});
-			// eslint-disable-next-line
-		}), []);
+		return () => cleanup && cleanup();
+		// eslint-disable-next-line
+	}, [gameName, userId]);
 
 	if (redirectTo) {
 		return <Redirect to={ redirectTo } />;
@@ -71,7 +89,7 @@ function GameLobby() {
 		<div className="row">
 			<div className="col-sm-8 offset-sm-2">
 				<div className="card">
-					<div className="card-header">{ gameId }</div>
+					<div className="card-header">{ gameName }</div>
 					<div className="card-body">
 						{ players.length < 2
 							? <h5 className="card-title">Waiting for player...</h5>

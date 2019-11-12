@@ -2,63 +2,120 @@ import * as firebase from 'firebase/app';
 import db from './db';
 
 /**
+ * Gets a random game name
+ *
+ * @returns {string}
+ */
+const getRandomGameName = () => {
+	return `Game_${Math.round(Math.random() * 1000)}`;
+};
+
+/**
  * Gets a document reference
  *
- * @param   {string}                                gameId
+ * @param   {string}                                gameName
  * @returns {firebase.firestore.DocumentReference}
  */
-export const getGameDocument = gameId => db.collection('games').doc(gameId);
+export const getGameDocument = gameName => db.collection('games')
+	.where('name', '==', gameName)
+	.get()
+	.then(snapshot => {
+		if (snapshot.empty) {
+			return createGame(gameName).then(getGameDocument);
+		}
+
+		return snapshot.docs[0].ref;
+	});
+
+/**
+ * Inserts a game to the games collection
+ *
+ * @param   {string|null}                               name
+ * @param   {string|null}                               userId
+ * @returns {Promise<firebase.firestore.QuerySnapshot>}
+ */
+export const createGame = async (name = null, userId = null) => {
+	name = name || getRandomGameName();
+	const gamesCollection = db.collection('games');
+
+	return gamesCollection.where('name', '==', name)
+		.get()
+		.then(snapshot => {
+			if (!snapshot.empty) {
+				return createGame(null, userId);
+			}
+
+			const values = { name };
+			if (userId) {
+				values.userIds = firebase.firestore.FieldValue.arrayUnion(userId);
+			}
+
+			return gamesCollection.add(values)
+				.then(() => name);
+		});
+};
 
 /**
  * Inserts a player with no weapon to the given game
  *
- * @param   {string|firebase.firestore.DocumentReference}   gameId
- * @param   {string}                                        userId
+ * @param   {firebase.firestore.DocumentReference}  gameDocument
+ * @param   {string}                                userId
  */
-export const addPlayerToGame = (gameId, userId) => {
-	const gameDocument = gameId instanceof firebase.firestore.DocumentReference
-		? gameId
-		: getGameDocument(gameId);
+export const addPlayerToGame = (gameDocument, userId) => {
+	gameDocument.get()
+		.then(snapshot => {
+			const { userIds = [] } = snapshot.data();
+			if (userIds.length === 2) {
+				throw new Error('Cannot add user to game');
+			}
 
-	const values = {
-		userId,
-		weapon: null
-	};
-
-	gameDocument.collection('players').add(values)
-		.catch(err => console.log(`Error encountered: ${err}`));
+			const values = { userIds: firebase.firestore.FieldValue.arrayUnion(userId) };
+			gameDocument.update(values)
+				.catch(err => console.log(`Error encountered: ${err}`));
+		});
 };
 
 /**
  * Updates a player's weapon
  *
- * @param   {firebase.firestore.DocumentReference}  gameDocument
- * @param   {string}                                userId
- * @param   {string}                                weapon
+ * @param   {firebase.firestore.DocumentReference}      gameDocument
+ * @param   {string}                                    userId
+ * @param   {string}                                    weapon
  * @returns {Promise<firebase.firestore.QuerySnapshot>}
  */
-export const addWeaponToGame = async (gameDocument, userId, weapon) => {
-	const values = { weapon };
+export const addWeaponToGame = async (gameDocument, userId, weapon) => gameDocument.get()
+	.then(snapshot => {
+		const { weapons = [] } = snapshot.data();
+		if (weapons.length === 2) {
+			throw new Error('Cannot add weapon to game');
+		}
 
-	return gameDocument.collection('players')
-		.where('userId', '==', userId)
-		.get()
-		.then(snapshot => snapshot.docs[0].ref.update(values));
-};
+		const values = firebase.firestore.FieldValue.arrayUnion({ userId, weapon });
+		return gameDocument.update('weapons', values);
+	});
 
 /**
  * Gets the weapon for the given player
  *
- * @param   {firebase.firestore.DocumentReference}  gameDocument
- * @param   {string}                                userId
+ * @param   {firebase.firestore.DocumentReference}      gameDocument
+ * @param   {string}                                    userId
  * @returns {Promise<firebase.firestore.QuerySnapshot>}
  */
-export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.collection('players')
-	.where('userId', '==', userId)
-	.get()
-	.then(snapshot => snapshot.empty
-		? addPlayerToGame(gameDocument, userId).then(() => null)
-		: snapshot.docs[0].data().weapon);
+export const getWeaponForPlayer = async (gameDocument, userId) => gameDocument.get()
+	.then(snapshot => {
+		const {
+			weapons = [],
+			userIds = []
+		} = snapshot.data();
+
+		if (!userIds.includes(userId)) {
+			addPlayerToGame(gameDocument, userId);
+			return null
+		} else {
+			const { weapon = null } = weapons.find(item => item.userId === userId) || {};
+			return weapon;
+		}
+	});
 
 /**
  * Determines the winner from the document snapshot data
@@ -102,20 +159,26 @@ export const getWinner = players => {
  * Resets the player's weapons for the given game
  *
  * @param {firebase.firestore.DocumentReference}    gameDocument
+ * @param {boolean}                                 tie
  */
-export const deleteWeapons = gameDocument => gameDocument.collection('players')
-	.get()
-	.then(snapshot => {
-		snapshot.docs.forEach(document => document.ref.update({ weapon: null }));
-	});
+export const deleteWeapons = (gameDocument, tie = false) => {
+	const values = { weapons: firebase.firestore.FieldValue.delete() };
+
+	if (tie) {
+		values.ties = firebase.firestore.FieldValue.increment(1);
+	}
+
+	gameDocument.update(values)
+		.catch(err => console.log(`Error encountered: ${err}`));
+};
 
 /**
  * Gets all the games where the given user is a player of
  *
- * @param userId
+ * @param   {string}                                            userId
  * @returns {Promise<firebase.firestore.DocumentReference[]>}
  */
-export const getGamesForUser = userId => db.collectionGroup('players')
-	.where('userId', '==', userId)
+export const getGamesForUser = userId => db.collection('games')
+	.where('userIds', 'array-contains', userId)
 	.get()
-	.then(snapshot => snapshot.docs.map(document => document.ref.parent.parent));
+	.then(snapshot => snapshot.docs);

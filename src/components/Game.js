@@ -69,7 +69,7 @@ function Game({ gameDocument, players, userId }) {
 
 	if (winner.tie) {
 		setTimeout(() => {
-			deleteWeapons(gameDocument);
+			deleteWeapons(gameDocument, true);
 			setWeapon(null);
 			setWinner({});
 		}, 3000);

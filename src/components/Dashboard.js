@@ -3,7 +3,7 @@ import React, {
 	useState
 } from 'react';
 import { Redirect } from 'react-router-dom';
-import DashbaordGamesList from './DashboardGamesList';
+import DashboardGamesList from './DashboardGamesList';
 import {
 	getGamesForUser,
 	getWinner
@@ -16,17 +16,17 @@ function Dashboard() {
 	const [
 		gamesWaitingForOpponent,
 		setGamesWaitingForOpponent
-	] = useState({});
+	] = useState([]);
 
 	const [
 		gamesWaitingForOpponentMove,
 		setGamesWaitingForOpponentMove
-	] = useState({});
+	] = useState([]);
 
 	const [
 		gamesWaitingForYourMove,
 		setGamesWaitingForYourMove
-	] = useState({});
+	] = useState([]);
 
 	const [
 		stats,
@@ -38,58 +38,59 @@ function Dashboard() {
 			return;
 		}
 
-		getGamesForUser(userId)
-			.then(documents => {
-				const promises = documents.map(document => document.collection('players').get());
-
-				Promise.all(promises)
-					.then(handleGameUpdates);
-			});
+		getGamesForUser(userId).then(handleGameUpdates);
 		// eslint-disable-next-line
 	}, [userId]);
 
 	const handleGameUpdates = snapshots => {
-		const newGamesWaitingForOpponent = Object.assign({}, gamesWaitingForOpponent);
-		const newGamesWaitingForOpponentMove = Object.assign({}, gamesWaitingForOpponentMove);
-		const newGamesWaitingForYourMove = Object.assign({}, gamesWaitingForYourMove);
+		const newGamesWaitingForOpponent = [...gamesWaitingForOpponent];
+		const newGamesWaitingForOpponentMove = [...gamesWaitingForOpponentMove];
+		const newGamesWaitingForYourMove = [...gamesWaitingForYourMove];
 		const newStats = Object.assign({}, stats);
 
 		snapshots.forEach(snapshot => {
-			const gameDocument = snapshot.docs[0].ref.parent.parent;
+			const {
+				name,
+				ties = 0,
+				userIds = [],
+				weapons = []
+			} = snapshot.data();
 
-			if (snapshot.size < 2) {
-				newGamesWaitingForOpponent[gameDocument.id] = gameDocument;
+			if (userIds.length < 2) {
+				newGamesWaitingForOpponent.push(name);
 			} else {
-				if (newGamesWaitingForOpponent.hasOwnProperty(gameDocument.id)) {
-					delete newGamesWaitingForOpponent[gameDocument.id];
+				const index = newGamesWaitingForOpponent.indexOf(name);
+				if (index >= 0) {
+					newGamesWaitingForOpponent.splice(index, 1);
 				}
 
-				const players = snapshot.docs.map(document => document.data());
-				const winner = getWinner(players);
+				const winner = getWinner(weapons);
 
 				if (
 					winner.userId === null
 					&& winner.tie === false
 				) {
-					const { weapon } = players.find(player => player.userId === userId);
+					const { weapon } = weapons.find(item => item.userId === userId) || {};
 					weapon
-						? newGamesWaitingForOpponentMove[gameDocument.id] = gameDocument
-						: newGamesWaitingForYourMove[gameDocument.id] = gameDocument;
+						? newGamesWaitingForOpponentMove.push(name)
+						: newGamesWaitingForYourMove.push(name);
 				} else {
-					if (newGamesWaitingForOpponentMove.hasOwnProperty(gameDocument.id)) {
-						delete newGamesWaitingForOpponentMove[gameDocument.id];
-					} else if (newGamesWaitingForYourMove.hasOwnProperty(gameDocument.id)) {
-						delete newGamesWaitingForYourMove[gameDocument.id];
+					const opponentIndex = newGamesWaitingForOpponentMove.indexOf(name);
+					const yourIndex = newGamesWaitingForYourMove.indexOf(name);
+					if (opponentIndex >= 0) {
+						newGamesWaitingForOpponentMove.splice(opponentIndex, 1);
+					} else if (yourIndex >= 0) {
+						newGamesWaitingForYourMove.splice(yourIndex, 1);
 					}
 
 					if (winner.userId === userId) {
 						newStats.wins++;
-					} else if (winner.tie) {
-						newStats.ties++;
-					} else if (winner.userId !== null) {
+					} else if (!winner.tie && winner.userId !== null) {
 						newStats.losses++;
 					}
 				}
+
+				newStats.ties = ties;
 			}
 		});
 
@@ -114,9 +115,9 @@ function Dashboard() {
 						<p className="card-text"><span className="strong">Ties:</span> {stats.ties}</p>
 						<p className="card-text"><span className="strong">Losses:</span> {stats.losses}</p>
 
-						<DashbaordGamesList title="Waiting for an opponent..." games={ gamesWaitingForOpponent } />
-						<DashbaordGamesList title="Waiting for opponent's move..." games={ gamesWaitingForOpponentMove } />
-						<DashbaordGamesList title="Waiting for your move..." games={ gamesWaitingForYourMove } />
+						<DashboardGamesList title="Waiting for an opponent..." games={ gamesWaitingForOpponent } />
+						<DashboardGamesList title="Waiting for opponent's move..." games={ gamesWaitingForOpponentMove } />
+						<DashboardGamesList title="Waiting for your move..." games={ gamesWaitingForYourMove } />
 					</div>
 				</div>
 			</div>

@@ -12,6 +12,11 @@ export const getLocalUser = () => {
 
 	try {
 		localUser = JSON.parse(window.localStorage.getItem('player')) || {};
+
+		if (!localUser.uid) {
+			localUser = {};
+			window.localStorage.removeItem('player');
+		}
 	} catch (error) {
 		console.log('Deleting corrupted player in local storage.');
 		window.localStorage.removeItem('player');

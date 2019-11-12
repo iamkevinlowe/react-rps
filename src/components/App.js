@@ -18,7 +18,7 @@ function App() {
 			<Switch>
 				<Redirect exact from="/" to="/home" />
 
-				<Route path="/game/:gameId">
+				<Route path="/game/:gameName">
 					<GameLobby />
 				</Route>
 				<Route path="/dashboard">

@@ -2,27 +2,25 @@ import React, {
 	useState
 } from 'react';
 import { Redirect } from 'react-router-dom';
+import { createGame } from '../services/game';
 
 function GameNew({ userId }) {
 	const [
-		gameId,
-		setGameId
+		gameName,
+		setGameName
 	] = useState(null);
 
-	const onClickHostHandler = () => {
-		const gameId = `Game_${Math.round(Math.random() * 1000)}`;
-		setGameId(gameId);
-	};
+	const onClickHostHandler = () => createGame(null, userId).then(setGameName);
 
 	const onSubmitJoinHandler = e => {
 		e.preventDefault();
 
-		const gameId = e.target.elements.name.value.trim();
-		setGameId(gameId);
+		const gameName = e.target.elements.name.value.trim();
+		setGameName(gameName);
 	};
 
-	if (gameId) {
-		return <Redirect to={`/game/${gameId}`} />;
+	if (gameName) {
+		return <Redirect to={`/game/${gameName}`} />;
 	}
 
 	return (

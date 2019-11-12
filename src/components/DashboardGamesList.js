@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-function DashbaordGamesList({ title, games }) {
-	if (!Object.keys(games).length) {
+function DashboardGamesList({ title, games }) {
+	if (!games.length) {
 		return null;
 	}
 
@@ -12,12 +12,12 @@ function DashbaordGamesList({ title, games }) {
 
 			<h5 className="card-title">{ title }</h5>
 			<div className="btn-group-vertical d-block">
-				{ Object.keys(games).map(documentId => (
-					<Link className="btn btn-primary" to={ `/game/${documentId}` } key={ documentId }>{ documentId }</Link>
+				{ games.map(name => (
+					<Link className="btn btn-primary" to={ `/game/${name}` } key={ name }>{ name }</Link>
 				)) }
 			</div>
 		</>
 	);
 }
 
-export default DashbaordGamesList;
+export default DashboardGamesList;
