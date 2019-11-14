@@ -65,7 +65,7 @@ export const signInEmail = user => {
 		.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
 		.then(() => {
 			const actionCodeSettings = {
-				url: process.env.ENVIRONMENT === 'production'
+				url: process.env.NODE_ENV === 'production'
 					? 'https://iamkevinlowe.github.io/react-rps'
 					: 'http://localhost:3000',
 				handleCodeInApp: true
