@@ -15,6 +15,7 @@ import Navbar from './Navbar';
 import PrivateRoute from './PrivateRoute';
 import { checkUserFromEmailLink, setAuthListener } from '../services/user';
 import 'bootstrap/scss/bootstrap.scss';
+import '@fortawesome/fontawesome-pro/css/all.css';
 
 function App() {
 	const [
