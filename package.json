@@ -4,6 +4,7 @@
 	"private": true,
 	"dependencies": {
 		"@babel/runtime": "^7.7.2",
+		"bootstrap": "^4.3.1",
 		"firebase": "^7.2.3",
 		"gh-pages": "^2.1.1",
 		"react": "^16.11.0",
@@ -34,5 +35,8 @@
 			"last 1 safari version"
 		]
 	},
-	"homepage": "http://iamkevinlowe.github.io/react-rps"
+	"homepage": "http://iamkevinlowe.github.io/react-rps",
+	"devDependencies": {
+		"node-sass": "^4.13.0"
+	}
 }

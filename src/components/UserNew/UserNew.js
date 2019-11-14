@@ -1,15 +1,8 @@
-import React, {
-	useEffect
-} from 'react';
+import React from 'react';
 import EmailPassword from './EmailPassword';
 import Google from './Google';
-import { getAuthorizedUser } from '../../services/user';
 
-function UserNew({ setUser }) {
-	useEffect(() => {
-		getAuthorizedUser().then(user => user && setUser(user));
-	}, [setUser]);
-
+function UserNew() {
 	return (
 		<div className="card">
 			<div className="card-body">

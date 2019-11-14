@@ -3,36 +3,6 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 
 /**
- * Gets the local user from the browser's local storage
- *
- * @returns {{}|{email: string, id: string, name: string}}
- */
-export const getLocalUser = () => {
-	let localUser = {};
-
-	try {
-		localUser = JSON.parse(window.localStorage.getItem('player')) || {};
-
-		if (!localUser.uid) {
-			localUser = {};
-			window.localStorage.removeItem('player');
-		}
-	} catch (error) {
-		console.log('Deleting corrupted player in local storage.');
-		window.localStorage.removeItem('player');
-	}
-
-	return localUser;
-};
-
-/**
- * Sets the given user on the browser's local storage
- *
- * @param   {object}    user
- */
-export const setLocalUser = user => window.localStorage.setItem('player', JSON.stringify(user));
-
-/**
  * Inserts a user to the users collection
  *
  * @param   {object}                                        user
@@ -76,8 +46,12 @@ export const getUser = async userId => db.collection('users')
  * Sign in user with Google
  */
 export const signInGoogle = () => {
-	const provider = new firebase.auth.GoogleAuthProvider();
-	firebase.auth().signInWithRedirect(provider);
+	firebase.auth()
+		.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+		.then(() => {
+			const provider = new firebase.auth.GoogleAuthProvider();
+			return firebase.auth().signInWithRedirect(provider);
+		});
 };
 
 /**
@@ -87,59 +61,87 @@ export const signInGoogle = () => {
  * @param {{ email: string, name: string }} user
  */
 export const signInEmail = user => {
-	const actionCodeSettings = {
-		url: process.env.ENVIRONMENT === 'production'
-			? 'https://iamkevinlowe.github.io/react-rps'
-			: 'http://localhost:3000',
-		handleCodeInApp: true
-	};
+	firebase.auth()
+		.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+		.then(() => {
+			const actionCodeSettings = {
+				url: process.env.ENVIRONMENT === 'production'
+					? 'https://iamkevinlowe.github.io/react-rps'
+					: 'http://localhost:3000',
+				handleCodeInApp: true
+			};
 
-	firebase.auth().sendSignInLinkToEmail(user.email, actionCodeSettings)
-		.then(() => window.localStorage.setItem('userForSignInEmail', JSON.stringify(user)));
+			firebase.auth()
+				.sendSignInLinkToEmail(user.email, actionCodeSettings)
+				.then(() => window.localStorage.setItem('userForSignInEmail', JSON.stringify(user)));
+		});
 };
 
 /**
- * Checks for an authorized user
+ * Checks for an authorized user from an email link
  *
- * @returns {Promise<firebase.auth.UserCredential>}
+ * @returns {Promise<boolean>}
  */
-export const getAuthorizedUser = () => {
+export const checkUserFromEmailLink = () => {
 	if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
-		let cachedUser = null;
-
 		try {
-			cachedUser = JSON.parse(window.localStorage.getItem('userForSignInEmail'));
+			const { email, name } = JSON.parse(window.localStorage.getItem('userForSignInEmail'));
+			if (!email || !name) {
+				throw new Error('Email and Name not found in local storage');
+			}
+
+			firebase.auth()
+				.signInWithEmailLink(email, window.location.href)
+				.then(({ user }) => {
+					window.localStorage.removeItem('userForSignInEmail');
+					user && addUser({
+						email: user.email || email,
+						name: name || user.displayName,
+						uid: user.uid
+					});
+				});
 		} catch (error) {
-			console.log('User corrupted in local storage');
+			console.log(error);
 			window.localStorage.removeItem('userForSignInEmail');
 		}
-
-		if (!cachedUser) {
-			throw new Error('No cached user');
-		}
-
-		return firebase.auth()
-			.signInWithEmailLink(cachedUser.email, window.location.href)
-			.then(({ user }) => {
-				window.localStorage.removeItem('userForSignInEmail');
-				return user
-					? addUser({
-						email: user.email || cachedUser.email,
-						uid: user.uid,
-						name: cachedUser.name || user.displayName
-					})
-					: null;
-			});
-	} else {
-		return firebase.auth()
-			.getRedirectResult()
-			.then(({ user }) => user
-				? addUser({
-					email: user.email,
-					uid: user.uid,
-					name: user.displayName
-				})
-				: null
-			);
+		return Promise.resolve(true);
 	}
+
+	return Promise.resolve(false);
 };
+
+/**
+ * Sets a listener for the auth state and executes the success handler
+ *
+ * @param   {function}              successHandler
+ * @returns {firebase.Unsubscribe}
+ */
+export const setAuthListener = successHandler => firebase.auth()
+	.onAuthStateChanged(user => {
+		if (user) {
+			db.collection('users')
+				.where('uid', '==', user.uid)
+				.get()
+				.then(snapshot => {
+					const authUser = {
+						email: user.email,
+						name: user.displayName,
+						uid: user.uid
+					};
+
+					if (snapshot.empty) {
+						return addUser(authUser);
+					}
+
+					authUser.id = snapshot.docs[0].ref.id;
+					return authUser;
+				}).then(successHandler);
+		} else {
+			successHandler();
+		}
+	});
+
+/**
+ * Logs the current user out
+ */
+export const logout = () => firebase.auth().signOut();

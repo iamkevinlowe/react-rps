@@ -2,17 +2,13 @@ import React, {
 	useEffect,
 	useState
 } from 'react';
-import { Redirect } from 'react-router-dom';
 import DashboardGamesList from './DashboardGamesList';
 import {
 	getGamesForUser,
 	getWinner
 } from '../services/game';
-import { getLocalUser } from '../services/user';
 
-function Dashboard() {
-	const { id: userId } = getLocalUser();
-
+function Dashboard({ userId }) {
 	const [
 		gamesWaitingForOpponent,
 		setGamesWaitingForOpponent
@@ -99,10 +95,6 @@ function Dashboard() {
 		setGamesWaitingForYourMove(newGamesWaitingForYourMove);
 		setStats(newStats);
 	};
-
-	if (!userId) {
-		return <Redirect to="/home?redirectTo=/dashboard" />;
-	}
 
 	return (
 		<div className="row">

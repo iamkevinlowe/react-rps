@@ -11,15 +11,11 @@ import {
 	addPlayerToGame,
 	getGameDocument
 } from '../services/game';
-import {
-	getLocalUser,
-	getUser
-} from '../services/user';
+import { getUser } from '../services/user';
 import { areArraysSame } from '../services/utils';
 
-function GameLobby() {
+function GameLobby({ userId }) {
 	const { gameName } = useParams();
-	const { id: userId } = getLocalUser();
 
 	const [
 		gameDocument,
@@ -52,8 +48,6 @@ function GameLobby() {
 				if (!userIds.includes(userId)) {
 					if (userIds.length >= 2) {
 						setRedirectTo('/home');
-					} else if (!userId) {
-						setRedirectTo(`/home?redirectTo=${window.location.hash.slice(1)}`);
 					} else {
 						addPlayerToGame(gameDocument, userId);
 					}
