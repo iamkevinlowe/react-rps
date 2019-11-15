@@ -86,7 +86,7 @@ function Dashboard({ userId }) {
 					}
 				}
 
-				newStats.ties = ties;
+				newStats.ties += ties;
 			}
 		});
 
