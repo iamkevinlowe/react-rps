@@ -159,18 +159,9 @@ export const getWinner = players => {
  * Resets the player's weapons for the given game
  *
  * @param {firebase.firestore.DocumentReference}    gameDocument
- * @param {boolean}                                 tie
  */
-export const deleteWeapons = (gameDocument, tie = false) => {
-	const values = { weapons: firebase.firestore.FieldValue.delete() };
-
-	if (tie) {
-		values.ties = firebase.firestore.FieldValue.increment(1);
-	}
-
-	gameDocument.update(values)
-		.catch(err => console.log(`Error encountered: ${err}`));
-};
+export const deleteWeapons = gameDocument => gameDocument.update({ weapons: firebase.firestore.FieldValue.delete() })
+	.catch(err => console.log(`Error encountered: ${err}`));
 
 /**
  * Gets all the games where the given user is a player of
